@@ -36,10 +36,12 @@
 
       pkgsARM = import nixpkgs { system = systemARM; };
 
-      iso =
-        (pkgsARM.nixos {
-          imports = [ "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-base.nix" ];
-        }).config.system.build.isoImage;
+      nixosARM = pkgsARM.nixos (import ./configuration.nix);
+
+      # iso =
+      #   (pkgsARM.nixos {
+      #     imports = [ "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-base.nix" ];
+      #   }).config.system.build.isoImage;
 
       vscode = pkgs.vscode-with-extensions.override {
         vscodeExtensions = with pkgs; [
@@ -109,7 +111,7 @@
       };
 
       packages.${systemARM} = rec {
-        default = iso;
+        default = nixosARM.vm;
       };
 
       applications.${system} = rec {

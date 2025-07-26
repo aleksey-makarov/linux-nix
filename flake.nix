@@ -21,6 +21,7 @@
     }:
     let
       system = "x86_64-linux";
+      systemARM = "aarch64-linux";
 
       overlays = [
         nix-vscode-extensions.overlays.default
@@ -33,6 +34,13 @@
         };
       };
 
+      pkgsARM = import nixpkgs { system = systemARM; };
+
+      iso =
+        (pkgsARM.nixos {
+          imports = [ "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-base.nix" ];
+        }).config.system.build.isoImage;
+
       vscode = pkgs.vscode-with-extensions.override {
         vscodeExtensions = with pkgs; [
 
@@ -43,6 +51,37 @@
 
         ];
       };
+
+      startvm_sh = pkgs.writeShellScript "startvm.sh" ''
+        ${pkgs.coreutils}/bin/mkdir -p ./xchg
+
+        TMPDIR=''$(pwd)
+        USE_TMPDIR=1
+        export TMPDIR USE_TMPDIR
+
+        TTY_FILE="./xchg/tty.sh"
+        read -r rows cols <<< "''$(${pkgs.coreutils}/bin/stty size)"
+
+        cat << EOF > "''${TTY_FILE}"
+        export TERM=xterm-256color
+        stty rows ''$rows cols ''$cols
+        reset
+        EOF
+
+        ${pkgs.coreutils}/bin/stty intr ^] # send INTR with Control-]
+        ${pkgs.qemu}/bin/qemu-system-aarch64 -nographic \
+            -machine virt -cpu cortex-a57 \
+            -bios ${pkgs.qemu}/share/qemu/edk2-aarch64-code.fd \
+            -drive if=none,file=./nixos-image-sd-card-aarch64-linux.img,id=hd0,format=raw \
+            -device virtio-blk-device,drive=hd0 \
+            -m 4G
+
+            # -bios ${pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64}/u-boot.bin \
+            # -dtb ${pkgs.qemu}/share/qemu/edk2-aarch64-code.dtb \
+            # ./nixos-image-sd-card-aarch64-linux.img \
+
+        ${pkgs.coreutils}/bin/stty intr ^c
+      '';
 
     in
     {
@@ -56,10 +95,32 @@
             ];
             shellHook = ''
               echo "nixpkgs: ${nixpkgs}"
+              echo "startvm_sh: ${startvm_sh}"
               export HOME=$(pwd)
             '';
           };
         default = env;
       };
+
+      packages.${system} = rec {
+        u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
+        qemu = pkgs.qemu;
+        default = startvm_sh;
+      };
+
+      packages.${systemARM} = rec {
+        default = iso;
+      };
+
+      applications.${system} = rec {
+
+        startvm = {
+          type = "app";
+          program = "${startvm_sh}";
+        };
+
+        default = startvm;
+      };
+
     };
 }

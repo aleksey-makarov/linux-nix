@@ -16,7 +16,7 @@ with lib;
 
 let
 
-  qemu-common = import ../../lib/qemu-common.nix { inherit lib pkgs; };
+  qemu-common = import ./qemu-common.nix { inherit lib pkgs; };
 
   cfg = config.virtualisation;
 
@@ -344,7 +344,7 @@ let
 
   # System image is akin to a complete NixOS install with
   # a boot partition and root partition.
-  systemImage = import ../../lib/make-disk-image.nix {
+  systemImage = import ./make-disk-image.nix {
     inherit pkgs config lib;
     additionalPaths = [ regInfo ];
     format = "qcow2";
@@ -363,7 +363,7 @@ let
 in
 {
   imports = [
-    ../profiles/qemu-guest.nix
+    ./qemu-guest.nix
     ./disk-size-option.nix
     (mkRenamedOptionModule
       [

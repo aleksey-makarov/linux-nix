@@ -2,13 +2,11 @@
   pkgs,
   lib,
   config,
-  modulesPath,
   ...
 }:
 with lib; {
   imports = [
-    (modulesPath + "/profiles/qemu-guest.nix")
-    (modulesPath + "/virtualisation/qemu-vm.nix")
+    # ./qemu-vm-no-kernel.nix  # Импортируется в flake.nix
   ];
 
   # https://nixos.wiki/wiki/Linux_kernel
@@ -30,7 +28,7 @@ with lib; {
     documentation.man.enable = false;
     documentation.nixos.enable = false;
     documentation.info.enable = false;
-    programs.bash.enableCompletion = false;
+    programs.bash.completion.enable = false;
     programs.command-not-found.enable = false;
 
     # programs.dconf.enable = true;

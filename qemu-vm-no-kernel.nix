@@ -364,7 +364,10 @@ in
 {
   imports = [
     ./qemu-guest.nix
-    ./disk-size-option.nix
+    # modules/module-list.nix includes image/images.nix, which includes virtualisation/disk-image.nix
+    # and virtually each additional image specific module in that file includes disk-size-option.nix
+    # so for now comment it out
+    # ./disk-size-option.nix
     (mkRenamedOptionModule
       [
         "virtualisation"

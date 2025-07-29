@@ -40,11 +40,16 @@
         inherit system;
         modules = [
           ./configuration.nix
-          ./qemu-vm-no-kernel.nix
+          # ./qemu-vm-no-kernel.nix
         ];
-        specialArgs = {
-          # Отключаем автоматическое подключение модулей виртуализации
-        };
+      };
+
+      nixosARM = nixpkgs.lib.nixosSystem {
+        inherit systemARM;
+        modules = [
+          ./configuration.nix
+          # ./qemu-vm-no-kernel.nix
+        ];
       };
 
       # iso =
@@ -117,12 +122,12 @@
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
         qemu = pkgs.qemu;
         startvm = startvm_sh;
-        default = nixos.config.system.build.vm;
+        default = nixos.config.system.build.images.raw;
       };
 
-      # packages.${systemARM} = rec {
-      #   default = nixosARM.vm;
-      # };
+      packages.${systemARM} = rec {
+        default = nixosARM.config.system.build.images.raw;
+      };
 
       applications.${system} = rec {
 

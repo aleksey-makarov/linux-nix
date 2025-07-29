@@ -45,7 +45,7 @@
       };
 
       nixosARM = nixpkgs.lib.nixosSystem {
-        inherit systemARM;
+        system = systemARM;
         modules = [
           ./configuration.nix
           # ./qemu-vm-no-kernel.nix

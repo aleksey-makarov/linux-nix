@@ -123,12 +123,14 @@
         qemu = pkgs.qemu;
         startvm = startvm_sh;
         # default = nixos.config.system.build.images.raw;
-        default = nixos.config.system.build.images.iso;
+        iso = nixos.config.system.build.images.iso;
+        default = nixos.config.system.build.images.sd-card;
       };
 
       packages.${systemARM} = rec {
         # default = nixosARM.config.system.build.images.raw;
-        default = nixosARM.config.system.build.images.iso;
+        iso = nixosARM.config.system.build.images.iso;
+        default = nixosARM.config.system.build.images.sd-card;
       };
 
       applications.${system} = rec {

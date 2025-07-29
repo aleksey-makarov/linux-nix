@@ -122,11 +122,13 @@
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
         qemu = pkgs.qemu;
         startvm = startvm_sh;
-        default = nixos.config.system.build.images.raw;
+        # default = nixos.config.system.build.images.raw;
+        default = nixos.config.system.build.images.iso;
       };
 
       packages.${systemARM} = rec {
-        default = nixosARM.config.system.build.images.raw;
+        # default = nixosARM.config.system.build.images.raw;
+        default = nixosARM.config.system.build.images.iso;
       };
 
       applications.${system} = rec {

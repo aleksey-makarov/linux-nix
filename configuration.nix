@@ -37,24 +37,25 @@ with lib; {
 
     # services.udev.packages = [pkgs.remote-virtio-gpu-debug];
 
-    # virtualisation = {
-    #   memorySize = 4 * 1024;
-    #   cores = 4;
-    #   forwardPorts = [
-    #     {
-    #       from = "host";
-    #       host.port = 10022;
-    #       guest.port = 22;
-    #     }
-    #   ];
-    #   qemu = {
-    #     options = [
-    #       "-device virtio-vga-gl"
-    #       "-display sdl,gl=on"
-    #       "-serial stdio"
-    #     ];
-    #   };
-    # };
+    virtualisation = {
+      memorySize = 4 * 1024;
+      cores = 4;
+      graphics = false;
+      forwardPorts = [
+        {
+          from = "host";
+          host.port = 10022;
+          guest.port = 22;
+        }
+      ];
+      qemu = {
+        options = [
+          # "-serial stdio"
+          # "-device virtio-vga-gl"
+          # "-display sdl,gl=on"
+        ];
+      };
+    };
 
     security.polkit.enable = true;
 

@@ -40,7 +40,7 @@
         inherit system;
         modules = [
           ./configuration.nix
-          # ./qemu-vm-no-kernel.nix
+          ./qemu-vm-no-kernel.nix
         ];
       };
 
@@ -51,11 +51,6 @@
           # ./qemu-vm-no-kernel.nix
         ];
       };
-
-      # iso =
-      #   (pkgsARM.nixos {
-      #     imports = [ "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-base.nix" ];
-      #   }).config.system.build.isoImage;
 
       vscode = pkgs.vscode-with-extensions.override {
         vscodeExtensions = with pkgs; [
@@ -124,7 +119,8 @@
         startvm = startvm_sh;
         # default = nixos.config.system.build.images.raw;
         iso = nixos.config.system.build.images.iso;
-        default = nixos.config.system.build.images.sd-card;
+        sd-card = nixos.config.system.build.images.sd-card;
+        default = nixos.config.system.build.vm;
       };
 
       packages.${systemARM} = rec {

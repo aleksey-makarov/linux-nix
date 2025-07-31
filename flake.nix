@@ -120,6 +120,9 @@
         # default = nixos.config.system.build.images.raw;
         iso = nixos.config.system.build.images.iso;
         sd-card = nixos.config.system.build.images.sd-card;
+        kernel = nixos.config.boot.kernelPackages.kernel;
+        kernel-dev = nixos.config.boot.kernelPackages.kernel.dev;
+        initramfs = nixos.config.system.build.initialRamdisk;
         default = nixos.config.system.build.vm;
       };
 

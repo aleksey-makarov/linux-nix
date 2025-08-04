@@ -50,7 +50,7 @@ with lib; {
       ];
       directBoot = {
         enable = true;
-        initrd = "${config.system.build.initialRamdisk}/initrd";
+        # initrd = "${config.system.build.initialRamdisk}/initrd";
       };
       qemu = {
         # options = [

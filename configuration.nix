@@ -48,12 +48,16 @@ with lib; {
           guest.port = 22;
         }
       ];
+      directBoot = {
+        enable = true;
+        initrd = "${config.system.build.initialRamdisk}/initrd";
+      };
       qemu = {
-        options = [
-          # "-serial stdio"
-          # "-device virtio-vga-gl"
-          # "-display sdl,gl=on"
-        ];
+        # options = [
+        #   # "-serial stdio"
+        #   # "-device virtio-vga-gl"
+        #   # "-display sdl,gl=on"
+        # ];
       };
     };
 

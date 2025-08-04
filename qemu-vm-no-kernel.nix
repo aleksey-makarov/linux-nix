@@ -399,6 +399,14 @@ in
       ]
       "Boot device is always persisted if you use a bootloader through the root disk image ; if this does not work for your usecase, please examine carefully what `virtualisation.{bootDevice, rootDevice, bootPartition}` options offer you and open an issue explaining your need.`"
     )
+    (mkRemovedOptionModule
+      [
+        "virtualisation"
+        "directBoot"
+        "initrd"
+      ]
+      "This option was removed, it is now always set to the initrd of the system."
+    )
   ];
 
   options = {
@@ -916,18 +924,6 @@ in
           This will not (re-)boot correctly into a system that has switched to a different configuration on disk.
         '';
       };
-      initrd = mkOption {
-        type = types.str;
-        default = "${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}";
-        defaultText = "\${config.system.build.initialRamdisk}/\${config.system.boot.loader.initrdFile}";
-        description = ''
-          In direct boot situations, you may want to influence the initrd to load
-          to use your own customized payload.
-
-          This is useful if you want to test the netboot image without
-          testing the firmware or the loading part.
-        '';
-      };
     };
 
     virtualisation.useBootLoader = mkOption {
@@ -1137,19 +1133,6 @@ in
           '';
         }
         {
-          assertion =
-            cfg.directBoot.enable || cfg.directBoot.initrd == options.virtualisation.directBoot.initrd.default;
-          message = ''
-            You changed the default of `virtualisation.directBoot.initrd` but you are not
-            using QEMU direct boot. This initrd will not be used in your current
-            boot configuration.
-
-            Either do not mutate `virtualisation.directBoot.initrd` or enable direct boot.
-
-            If you have a more advanced usecase, please open an issue or a pull request.
-          '';
-        }
-        {
           assertion = cfg.installBootLoader -> config.system.switch.enable;
           message = ''
             `system.switch.enable` must be enabled for `virtualisation.installBootLoader` to work.
@@ -1257,20 +1240,11 @@ in
         "-device usb-kbd"
         "-device usb-tablet"
       ])
-      (
-        let
-          alphaNumericChars = lowerChars ++ upperChars ++ (map toString (range 0 9));
-          # Replace all non-alphanumeric characters with underscores
-          sanitizeShellIdent =
-            s:
-            concatMapStrings (c: if builtins.elem c alphaNumericChars then c else "_") (stringToCharacters s);
-        in
-        mkIf cfg.directBoot.enable [
-          "-kernel \${NIXPKGS_QEMU_KERNEL_${sanitizeShellIdent config.system.name}:-${config.system.build.toplevel}/kernel}"
-          "-initrd ${cfg.directBoot.initrd}"
+      (mkIf cfg.directBoot.enable [
+          "-kernel ${config.system.build.toplevel}/kernel"
+          "-initrd ${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}"
           ''-append "$(cat ${config.system.build.toplevel}/kernel-params) init=${config.system.build.toplevel}/init regInfo=${regInfo}/registration ${consoles} $QEMU_KERNEL_PARAMS"''
-        ]
-      )
+      ])
       (mkIf cfg.useEFIBoot [
         "-drive if=pflash,format=raw,unit=0,readonly=on,file=${cfg.efi.firmware}"
         "-drive if=pflash,format=raw,unit=1,readonly=off,file=$NIX_EFI_VARS"

@@ -35,6 +35,7 @@
       };
 
       pkgsARM = import nixpkgs { system = systemARM; };
+      pkgsCross = pkgs.pkgsCross.aarch64-multiplatform;
 
       nixos = nixpkgs.lib.nixosSystem {
         inherit system;
@@ -97,20 +98,42 @@
     in
     {
       devShells.${system} = rec {
-        env =
+        default =
           with pkgs;
           mkShell {
             packages = [
               vscode
+              pkgsCross.stdenv.cc
+
+              coreutils
+              bc
+              bison
+              flex
+              openssl
+              perl
+              cpio
+              xz
+              kmod
+              ncurses
+              python3
+              git
+              elfutils
+
               nixfmt-rfc-style
+              shellcheck
+
+              mc # for mcedit
+
             ];
             shellHook = ''
-              echo "nixpkgs: ${nixpkgs}"
-              echo "startvm_sh: ${startvm_sh}"
               export HOME=$(pwd)
+              echo "nixpkgs: ${nixpkgs}"
             '';
+            env = {
+              EDITOR = "mcedit";
+              CROSS_COMPILE_arm64 = pkgsCross.stdenv.cc.targetPrefix;
+            };
           };
-        default = env;
       };
 
       packages.${system} = rec {

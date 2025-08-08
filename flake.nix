@@ -1,7 +1,7 @@
 {
-  description = "QEMU AArch64";
+  description = "Nix environment for linux kernel development";
 
-  nixConfig.bash-prompt = "qemu-aarch64";
+  nixConfig.bash-prompt = "linux-nix";
   nixConfig.bash-prompt-prefix = "[\\[\\033[1;33m\\]";
   nixConfig.bash-prompt-suffix = "\\[\\033[0m\\] \\w]$ ";
 

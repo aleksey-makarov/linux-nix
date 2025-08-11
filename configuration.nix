@@ -53,6 +53,7 @@ with lib;
       directBoot = {
         enable = true;
         # initrd = "${config.system.build.initialRamdisk}/initrd";
+        external = true;
       };
       qemu = {
         # options = [

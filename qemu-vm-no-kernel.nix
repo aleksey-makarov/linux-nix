@@ -118,7 +118,25 @@ let
   startVM = ''
     #! ${hostPkgs.runtimeShell}
 
+    set -x
+
     export PATH=${makeBinPath [ hostPkgs.coreutils ]}''${PATH:+:}$PATH
+
+    ${lib.optionalString cfg.directBoot.external ''
+      # Handle external kernel and initrd from command line arguments
+      # if [ -n "$1" ] && [ -n "$2" ]; then
+      if [ -n "$1" ]; then
+        kernel="$(realpath $1)"
+        shift
+        echo "kernel: $kernel"
+        # initrd="$2"
+        echo "Using external kernel: $kernel"
+        # echo "Using external initrd: $initrd"
+      else
+        echo "Error: When directBoot.external is enabled, both kernel and initrd paths must be provided as arguments"
+        exit 1
+      fi
+    ''}
 
     set -e
 
@@ -305,6 +323,8 @@ let
       ))
       (builtins.concatStringsSep "")
     ]}
+
+    echo "kernel: $kernel"
 
     # Start QEMU.
     exec ${qemu-common.qemuBinary qemu} \
@@ -924,6 +944,15 @@ in
           This will not (re-)boot correctly into a system that has switched to a different configuration on disk.
         '';
       };
+      external = mkOption {
+        type = types.bool;
+        default = false;
+        defaultText = "false";
+        description = ''
+          If enabled, load the kernel and initrd from the host filesystem
+          instead of the Nix store image.
+        '';
+        };
     };
 
     virtualisation.useBootLoader = mkOption {
@@ -1240,11 +1269,18 @@ in
         "-device usb-kbd"
         "-device usb-tablet"
       ])
-      (mkIf cfg.directBoot.enable [
-          "-kernel ${config.system.build.toplevel}/kernel"
-          "-initrd ${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}"
-          ''-append "$(cat ${config.system.build.toplevel}/kernel-params) init=${config.system.build.toplevel}/init regInfo=${regInfo}/registration ${consoles} $QEMU_KERNEL_PARAMS"''
-      ])
+      (mkIf cfg.directBoot.enable (
+        if cfg.directBoot.external
+          then [
+              "-kernel $kernel"
+              ''-append "$(cat ${config.system.build.toplevel}/kernel-params) init=${config.system.build.toplevel}/init regInfo=${regInfo}/registration ${consoles} $QEMU_KERNEL_PARAMS"''
+          ]
+          else [
+              "-kernel ${config.system.build.toplevel}/kernel"
+              "-initrd ${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}"
+              ''-append "$(cat ${config.system.build.toplevel}/kernel-params) init=${config.system.build.toplevel}/init regInfo=${regInfo}/registration ${consoles} $QEMU_KERNEL_PARAMS"''
+          ]
+      ))
       (mkIf cfg.useEFIBoot [
         "-drive if=pflash,format=raw,unit=0,readonly=on,file=${cfg.efi.firmware}"
         "-drive if=pflash,format=raw,unit=1,readonly=off,file=$NIX_EFI_VARS"

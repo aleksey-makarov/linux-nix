@@ -20,6 +20,14 @@ function build_linux() {
 	local linux_source=$2
 	local config=$3
 
+	local prelude=""
+	local exported_vars=("ARCH" "CROSS_COMPILE")
+	for V in "${exported_vars[@]}"; do
+		if [ -n "${!V}" ]; then
+			prelude+="export ${V}=${!V}"$'\n'
+		fi
+	done
+
 	local LINUX_DIR DATE BUILD_DIR MODULES_DIR
 	LINUX_DIR=$(realpath "$linux_source")
 	DATE=$(date '+%y%m%d%H%M%S')
@@ -40,6 +48,7 @@ function build_linux() {
 	cat <<-EOF > go.sh
 	#!/usr/bin/env bash
 
+	$prelude
 	make -j "\$(nproc)"
 	INSTALL_MOD_PATH="$MODULES_DIR" make -j "\$(nproc)" modules_install
 	EOF

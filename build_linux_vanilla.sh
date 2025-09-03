@@ -3,5 +3,7 @@
 . ./build_linux.sh
 
 LINUX_MIRROR_DIR="/home/amakarov/src/linux.git"
+LINUX_COMMIT=v6.12.40
 
-build_linux linux ${LINUX_MIRROR_DIR} v6.12.40 ./linux-config
+prepare_linux_sources ${LINUX_MIRROR_DIR} ${LINUX_COMMIT}
+build_linux linux linux.${LINUX_COMMIT} ./linux-config

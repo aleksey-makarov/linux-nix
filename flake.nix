@@ -132,6 +132,7 @@
             env = {
               EDITOR = "mcedit";
               CROSS_COMPILE_arm64 = pkgsCross.stdenv.cc.targetPrefix;
+              NIX_QEMU = pkgs.qemu;
             };
           };
       };
@@ -170,5 +171,11 @@
         default = nixos;
       };
 
+      nixosConfigurations.qemu = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./configuration-test.nix
+        ];
+      };
     };
 }

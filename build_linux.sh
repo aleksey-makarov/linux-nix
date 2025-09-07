@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+function echoy() {
+    local message="$1"
+    echo -e "\033[33m$message\033[0m"
+}
+
 function prepare_linux_sources() {
 	local source_git=$1
 	local version=$2
@@ -8,10 +13,10 @@ function prepare_linux_sources() {
 	LINUX_DIR=$(realpath "linux.$version")
 
 	if [ ! -e "$LINUX_DIR" ] ; then
-		echo "Creating $LINUX_DIR"
+		echoy "Creating $LINUX_DIR"
 		git -c advice.detachedHead=false clone --depth=1 --branch "$version" --single-branch "file://$source_git" "$LINUX_DIR"
 	else
-		echo "$LINUX_DIR is already there"
+		echoy "$LINUX_DIR is already there"
 	fi
 }
 

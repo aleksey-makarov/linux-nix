@@ -25,6 +25,9 @@
 
       overlays = [
         nix-vscode-extensions.overlays.default
+        (final: prev: {
+          shiminit = final.callPackage ./shiminit { };
+        })
       ];
 
       pkgs = import nixpkgs {
@@ -123,7 +126,6 @@
               shellcheck
 
               mc # for mcedit
-
             ];
             shellHook = ''
               export HOME=$(pwd)
@@ -141,6 +143,8 @@
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
         qemu = pkgs.qemu;
         startvm = startvm_sh;
+        shiminit = pkgs.shiminit;
+        shiminit-static = pkgs.pkgsStatic.shiminit;
         # default = nixos.config.system.build.images.raw;
         iso = nixos.config.system.build.images.iso;
         sd-card = nixos.config.system.build.images.sd-card;

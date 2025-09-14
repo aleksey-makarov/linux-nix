@@ -24,77 +24,65 @@
     pr('*', format,  ##__VA_ARGS__)
 
 #define pr_die( format, ... ) do {    \
-    pr('!', format,  ##__VA_ARGS__);   \
+    pr('!', format,  ##__VA_ARGS__);  \
     sync();                           \
     /* reboot(LINUX_REBOOT_CMD_RESTART); */ \
-    /* _exit(1);                         */ \
+    _exit(1);                         \
 } while(0)
 
-static void must_mkdir(const char *p, mode_t m) {
-    if (mkdir(p, m) == -1 && errno != EEXIST) {
-        pr_die("mkdir(%s): %m", p);
-    }
-}
+struct mntpoint {
+    const char *dev;
+    const char *fs_type;
+    const char *where;
+    mode_t mode;
+    const char *options;
+    unsigned long flags;
+};
 
-static void must_mount(const char *src, const char *tgt, const char *type,
-                       unsigned long flags, const char *data) {
-    if (mount(src, tgt, type, flags, data) == -1)
-        pr_die("mount(%s -> %s, type=%s, data=\"%s\"): %m",
-            src ? src : "(null)", tgt, type ? type : "(null)",
-            data ? data : "");
-}
-
-static const char *fs_type = "9p";
-static const char *nix_tag = "nixshare";
-static const char *init_path = "/nix/var/nix/profiles/system/init";
-static const char *nix_mount_opts_9p =
+static const char nix_mount_opts_9p[] =
     "trans=virtio,version=9p2000.L,cache=mmap,msize=1048576";
 
-static void parse_args(int argc, char **argv) {
-    for (int i = 1; i < argc; ++i) {
-        if (!strncmp(argv[i], "--fs=", 5)) {
-            fs_type = argv[i] + 5;               // "9p" | "virtiofs"
-        } else if (!strncmp(argv[i], "--tag=", 6)) {
-            nix_tag = argv[i] + 6;               // name of mount_tag
-        } else if (!strncmp(argv[i], "--init=", 7)) {
-            init_path = argv[i] + 7;             // path to stage-2 init
-        } else {
-            pr_info("warning: unknown arg ignored: %s", argv[i]);
-        }
-    }
-}
+static struct mntpoint mntpoints[] = {
+    { NULL,         "proc",     "/proc", 0555, NULL,              0 },
+    { NULL,         "sysfs",    "/sys",  0555, NULL,              0 },
+    { NULL,         "devtmpfs", "/dev",  0755, NULL,              0 }, // FIXME: this can fail if devtmpfs is not supported (?)
+    { NULL,         "tmpfs",    "/run",  0755, NULL,              0 },
+    { "nixshare",   "9p",       "/nix",  0755, nix_mount_opts_9p, 0 },
+    { NULL,         NULL,       NULL,    0,    NULL,              0 },
+};
 
-int main(int argc, char **argv) {
+// static const char init_path[] = "/nix/var/nix/profiles/system/init";
+
+int main() {
 
     pr_info("shiminit started");
 
-    must_mkdir("/proc", 0555);
-    must_mkdir("/sys",  0555);
-    must_mkdir("/dev",  0755);
-    must_mkdir("/run",  0755);
-    must_mkdir("/nix",  0755);
+    for (struct mntpoint *mp = mntpoints; mp->where; mp++) {
 
-    parse_args(argc, argv);
+        pr_info("mounting \"%s\" (\"%s\") at \"%s\" (%04o), options: \"%s\"",
+            mp->dev ? mp->dev : "(null)",
+            mp->fs_type,
+            mp->where,
+            mp->mode,
+            mp->options ? mp->options : "(none)");
 
-    pr_info("booting: fs=%s tag=%s init=%s", fs_type, nix_tag, init_path);
+        if (mkdir(mp->where, mp->mode) == -1 && errno != EEXIST)
+            pr_die("mkdir(\"%s\", %04o): %m", mp->where, mp->mode);
 
-    if (mount("devtmpfs", "/dev", "devtmpfs", 0, "") == -1)
-        pr_info("note: devtmpfs mount failed: %s", strerror(errno));
-    must_mount("proc", "/proc", "proc", 0, "");
-    must_mount("sysfs", "/sys", "sysfs", 0, "");
-
-    if (!strcmp(fs_type, "9p")) {
-        must_mount(nix_tag, "/nix", "9p", 0, nix_mount_opts_9p);
-    } else if (!strcmp(fs_type, "virtiofs")) {
-        must_mount(nix_tag, "/nix", "virtiofs", 0, "");
-    } else {
-        pr_die("unsupported fs type for /nix: %s", fs_type);
+        if (mount(mp->dev, mp->where, mp->fs_type, mp->flags, mp->options) == -1)
+            pr_die("mount(\"%s\", \"%s\", \"%s\", 0x%lx, \"%s\"): %m",
+                mp->dev ? mp->dev : "(null)",
+                mp->where,
+                mp->fs_type,
+                mp->flags,
+                mp->options ? mp->options : "");
     }
 
-    pr_info("exec: %s", init_path);
-    char *const new_argv[] = { "init", NULL };
-    execv(init_path, new_argv);
+    // pr_info("exec: %s", init_path);
+    // char *const new_argv[] = { "init", NULL };
+    // execv(init_path, new_argv);
+    // pr_die("execv(%s) failed: %m", init_path);
 
-    pr_die("execv(%s) failed: %m", init_path);
+    pr_die("exec() is not implemented yet");
     return 1;
 }

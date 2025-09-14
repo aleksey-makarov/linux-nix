@@ -29,7 +29,7 @@
           shiminit = final.callPackage ./shiminit { };
           test-script = final.callPackage ./test-script.nix {
             nixosSystem = nixos.config.system.build.toplevel;
-            shiminit = final.pkgsStatic.shiminit;
+            init-binary = "${final.pkgsStatic.shiminit}/bin/shiminit";
           };
         })
       ];

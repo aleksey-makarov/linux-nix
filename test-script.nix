@@ -5,14 +5,16 @@
 , e2fsprogs
 , util-linux
 , nixosSystem
-, shiminit
+, init-binary
 }:
 
 writeShellScript "test-qemu" ''
   set -euo pipefail
 
   KERNEL=$HOME/linux_build/arch/x86/boot/bzImage
-  DISK_IMAGE="$HOME/shimdisk.img"
+  INIT_BINARY_NAME=$(${coreutils}/bin/basename ${init-binary})
+  INIT_BINARY_MD5=$(${coreutils}/bin/md5sum ${init-binary} | ${coreutils}/bin/cut -d' ' -f1)
+  DISK_IMAGE="$HOME/shimdisk-$INIT_BINARY_MD5.img"
   DISK_SIZE_BYTES=$((64 * 1024 * 1024))
   DISK_LABEL="imgroot"
 
@@ -24,8 +26,8 @@ writeShellScript "test-qemu" ''
       temp_dir=$(${coreutils}/bin/mktemp -d)
       trap "${coreutils}/bin/rm -rf $temp_dir" EXIT
 
-      # Копируем shiminit в корень диска
-      ${coreutils}/bin/cp ${shiminit}/bin/shiminit "$temp_dir/"
+      # Копируем init-binary в корень диска
+      ${coreutils}/bin/cp ${init-binary} "$temp_dir/"
 
       # Создаем пустой файл нужного размера
       ${coreutils}/bin/truncate -s "$DISK_SIZE_BYTES" "$DISK_IMAGE"
@@ -47,7 +49,7 @@ writeShellScript "test-qemu" ''
       "root=/dev/vda"
       "rootfstype=ext4"
       "rw"
-      "init=/shiminit"
+      "init=/$INIT_BINARY_NAME"
       "console=ttyS0"
       "systemConfig=${nixosSystem}"
   )

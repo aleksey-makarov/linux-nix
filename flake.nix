@@ -27,6 +27,10 @@
         nix-vscode-extensions.overlays.default
         (final: prev: {
           shiminit = final.callPackage ./shiminit { };
+          test-script = final.callPackage ./test-script.nix {
+            nixosSystem = nixos.config.system.build.toplevel;
+            shiminit = final.pkgsStatic.shiminit;
+          };
         })
       ];
 
@@ -143,9 +147,9 @@
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
         qemu = pkgs.qemu;
         startvm = startvm_sh;
+        test-script = pkgs.test-script;
 
         shiminit = pkgs.pkgsStatic.shiminit;
-        shimdisk = pkgs.callPackage (import ./shimdisk.nix "${pkgs.pkgsStatic.shiminit}/bin/shiminit") { };
 
         # default = nixos.config.system.build.images.raw;
         iso = nixos.config.system.build.images.iso;
@@ -167,6 +171,11 @@
         startvm = {
           type = "app";
           program = "${startvm_sh}";
+        };
+
+        test-script = {
+          type = "app";
+          program = "${pkgs.test-script}";
         };
 
         nixos = {

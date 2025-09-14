@@ -69,13 +69,21 @@ int main() {
         if (mkdir(mp->where, mp->mode) == -1 && errno != EEXIST)
             pr_die("mkdir(\"%s\", %04o): %m", mp->where, mp->mode);
 
-        if (mount(mp->dev, mp->where, mp->fs_type, mp->flags, mp->options) == -1)
+        if (mount(mp->dev, mp->where, mp->fs_type, mp->flags, mp->options) == -1) {
+
+            // devtmpfs может быть уже примонтирован ядром автоматически
+            if (strcmp(mp->fs_type, "devtmpfs") == 0 && errno == EBUSY) {
+                pr_info("devtmpfs already mounted at %s, skipping", mp->where);
+                continue;
+            }
+
             pr_die("mount(\"%s\", \"%s\", \"%s\", 0x%lx, \"%s\"): %m",
                 mp->dev ? mp->dev : "(null)",
                 mp->where,
                 mp->fs_type,
                 mp->flags,
                 mp->options ? mp->options : "");
+        }
     }
 
     // pr_info("exec: %s", init_path);

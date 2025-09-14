@@ -63,6 +63,7 @@ writeShellScript "test-qemu" ''
     -cpu host -enable-kvm \
     -kernel "$KERNEL" \
     -drive file="$DISK_IMAGE",format=raw,if=virtio \
+    -virtfs local,path=/nix,mount_tag=nixshare,security_model=passthrough,readonly=on \
     -append "''${KERNEL_PARAMS[*]}" \
     -display none \
     -serial stdio

@@ -44,11 +44,18 @@
       pkgsARM = import nixpkgs { system = systemARM; };
       pkgsCross = pkgs.pkgsCross.aarch64-multiplatform;
 
+      # nixos = nixpkgs.lib.nixosSystem {
+      #   inherit system;
+      #   modules = [
+      #     ./configuration.nix
+      #     ./qemu-vm-no-kernel.nix
+      #   ];
+      # };
+
       nixos = nixpkgs.lib.nixosSystem {
-        inherit system;
+        system = "x86_64-linux";
         modules = [
-          ./configuration.nix
-          ./qemu-vm-no-kernel.nix
+          ./configuration-test.nix
         ];
       };
 
@@ -167,30 +174,14 @@
       };
 
       applications.${system} = rec {
-
         startvm = {
           type = "app";
           program = "${startvm_sh}";
         };
-
         test-script = {
           type = "app";
           program = "${pkgs.test-script}";
         };
-
-        nixos = {
-          type = "app";
-          program = "${nixos.config.system.build.vm}/bin/run-nixos-vm";
-        };
-
-        default = nixos;
-      };
-
-      nixosConfigurations.qemu = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ./configuration-test.nix
-        ];
       };
     };
 }

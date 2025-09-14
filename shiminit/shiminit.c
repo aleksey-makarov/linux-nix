@@ -23,11 +23,11 @@
 #define pr_err( format, ... ) \
     pr('*', format,  ##__VA_ARGS__)
 
-#define pr_die( format, ... ) do {    \
-    pr('!', format,  ##__VA_ARGS__);  \
-    sync();                           \
-    /* reboot(LINUX_REBOOT_CMD_RESTART); */ \
-    _exit(1);                         \
+#define pr_die( format, ... ) do {   \
+    pr('!', format,  ##__VA_ARGS__); \
+    sync();                          \
+    reboot(LINUX_REBOOT_CMD_HALT);   \
+    _exit(1);                        \
 } while(0)
 
 struct mntpoint {
@@ -45,13 +45,11 @@ static const char nix_mount_opts_9p[] =
 static struct mntpoint mntpoints[] = {
     { NULL,         "proc",     "/proc", 0555, NULL,              0 },
     { NULL,         "sysfs",    "/sys",  0555, NULL,              0 },
-    { NULL,         "devtmpfs", "/dev",  0755, NULL,              0 }, // FIXME: this can fail if devtmpfs is not supported (?)
+    { NULL,         "devtmpfs", "/dev",  0755, NULL,              0 },
     { NULL,         "tmpfs",    "/run",  0755, NULL,              0 },
     { "nixshare",   "9p",       "/nix",  0755, nix_mount_opts_9p, 0 },
     { NULL,         NULL,       NULL,    0,    NULL,              0 },
 };
-
-// static const char init_path[] = "/nix/var/nix/profiles/system/init";
 
 int main() {
 
@@ -71,7 +69,7 @@ int main() {
 
         if (mount(mp->dev, mp->where, mp->fs_type, mp->flags, mp->options) == -1) {
 
-            // devtmpfs может быть уже примонтирован ядром автоматически
+            // devtmpfs may already be mounted automatically by the kernel
             if (strcmp(mp->fs_type, "devtmpfs") == 0 && errno == EBUSY) {
                 pr_info("devtmpfs already mounted at %s, skipping", mp->where);
                 continue;
@@ -86,10 +84,52 @@ int main() {
         }
     }
 
-    // pr_info("exec: %s", init_path);
-    // char *const new_argv[] = { "init", NULL };
-    // execv(init_path, new_argv);
-    // pr_die("execv(%s) failed: %m", init_path);
+    // Parse kernel command line to find systemConfig=xxx
+    pr_info("parsing kernel command line for systemConfig parameter");
+
+    FILE *cmdline = fopen("/proc/cmdline", "r");
+    if (!cmdline) {
+        pr_die("failed to open /proc/cmdline: %m");
+    }
+
+    char cmdline_buf[4096];
+    if (!fgets(cmdline_buf, sizeof(cmdline_buf), cmdline)) {
+        pr_die("failed to read /proc/cmdline: %m");
+    }
+    fclose(cmdline);
+
+    // Remove newline character at the end
+    size_t len = strlen(cmdline_buf);
+    if (len > 0 && cmdline_buf[len-1] == '\n') {
+        cmdline_buf[len-1] = '\0';
+    }
+
+    pr_info("kernel command line: %s", cmdline_buf);
+
+    // Look for systemConfig= parameter
+    char *system_config = NULL;
+    char *token = strtok(cmdline_buf, " \t");
+    while (token != NULL) {
+        if (strncmp(token, "systemConfig=", 13) == 0) {
+            system_config = token + 13; // skip "systemConfig="
+            break;
+        }
+        token = strtok(NULL, " \t");
+    }
+
+    if (system_config) {
+        pr_info("found systemConfig parameter: %s", system_config);
+    } else {
+        pr_die("systemConfig parameter not found in kernel command line");
+    }
+
+    char exec_buf[4096];
+    snprintf(exec_buf, sizeof(exec_buf), "%s/init", system_config);
+    exec_buf[sizeof(exec_buf)-1] = '\0'; // ensure null-termination
+    pr_info("exec: %s", exec_buf);
+    char *const new_argv[] = { "init", NULL };
+    execv(exec_buf, new_argv);
+    pr_die("execv(\"%s\") failed: %m", exec_buf);
 
     pr_die("exec() is not implemented yet");
     return 1;

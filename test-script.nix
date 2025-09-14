@@ -18,24 +18,24 @@ writeShellScript "test-qemu" ''
   DISK_SIZE_BYTES=$((64 * 1024 * 1024))
   DISK_LABEL="imgroot"
 
-  # Создаем диск если его нет
+  # Create disk if it doesn't exist
   if [[ ! -f "$DISK_IMAGE" ]]; then
       echo "Creating disk image at $DISK_IMAGE..."
 
-      # Создаем временную директорию для содержимого диска
+      # Create temporary directory for disk contents
       temp_dir=$(${coreutils}/bin/mktemp -d)
       trap "${coreutils}/bin/rm -rf $temp_dir" EXIT
 
-      # Копируем init-binary в корень диска
+      # Copy init-binary to disk root
       ${coreutils}/bin/cp ${init-binary} "$temp_dir/"
 
-      # Создаем пустой файл нужного размера
+      # Create empty file of required size
       ${coreutils}/bin/truncate -s "$DISK_SIZE_BYTES" "$DISK_IMAGE"
 
-      # Форматируем как ext4 с содержимым
+      # Format as ext4 with contents
       ${e2fsprogs}/bin/mke2fs -t ext4 -F -U random -L "$DISK_LABEL" -E root_owner=0:0 -d "$temp_dir" "$DISK_IMAGE"
 
-      # Убираем trap и удаляем временную директорию вручную
+      # Remove trap and delete temporary directory manually
       trap - EXIT
       ${coreutils}/bin/rm -rf "$temp_dir"
 
@@ -44,7 +44,12 @@ writeShellScript "test-qemu" ''
       echo "Disk image already exists at $DISK_IMAGE"
   fi
 
-  # Параметры ядра
+  # Create symbolic link for convenience
+  SYMLINK_IMAGE="$HOME/shimdisk.img"
+  ${coreutils}/bin/ln -sf "$DISK_IMAGE" "$SYMLINK_IMAGE"
+  echo "Symlink created: $SYMLINK_IMAGE -> $DISK_IMAGE"
+
+  # Kernel parameters
   KERNEL_PARAMS=(
       "root=/dev/vda"
       "rootfstype=ext4"

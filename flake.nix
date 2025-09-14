@@ -143,8 +143,10 @@
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
         qemu = pkgs.qemu;
         startvm = startvm_sh;
-        shiminit = pkgs.shiminit;
-        shiminit-static = pkgs.pkgsStatic.shiminit;
+
+        shiminit = pkgs.pkgsStatic.shiminit;
+        shimdisk = pkgs.callPackage (import ./shimdisk.nix "${pkgs.pkgsStatic.shiminit}/bin/shiminit") { };
+
         # default = nixos.config.system.build.images.raw;
         iso = nixos.config.system.build.images.iso;
         sd-card = nixos.config.system.build.images.sd-card;

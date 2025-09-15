@@ -17,6 +17,7 @@ writeShellScript "test-qemu" ''
   DISK_IMAGE="$HOME/shimdisk-$INIT_BINARY_MD5.img"
   DISK_SIZE_BYTES=$((64 * 1024 * 1024))
   DISK_LABEL="imgroot"
+  MODULES_DIR=$(${coreutils}/bin/realpath $HOME/linux_modules/lib/modules)
 
   # Create disk if it doesn't exist
   if [[ ! -f "$DISK_IMAGE" ]]; then
@@ -69,6 +70,7 @@ writeShellScript "test-qemu" ''
     -kernel "$KERNEL" \
     -drive file="$DISK_IMAGE",format=raw,if=virtio \
     -virtfs local,path=/nix,mount_tag=nixshare,security_model=passthrough,readonly=on \
+    -virtfs local,path="$MODULES_DIR",mount_tag=modulesshare,security_model=passthrough,readonly=on \
     -append "''${KERNEL_PARAMS[*]}" \
     -display none \
     -serial stdio

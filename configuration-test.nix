@@ -27,10 +27,24 @@ with lib;
       consoleLogLevel = 7;
     };
 
-    fileSystems."/" = {
-      device = "/dev/root";
-      fsType = "9p";
-      options = [ "trans=virtio" "version=9p2000.L" ];
+    fileSystems = {
+      "/" = {
+        device = "/dev/root";
+        fsType = "9p";
+        options = [
+          "trans=virtio"
+          "version=9p2000.L"
+        ];
+      };
+      "/lib/modules" = {
+        device = "modulesshare";
+        fsType = "9p";
+        options = [
+          "trans=virtio"
+          "version=9p2000.L"
+          "ro"
+        ];
+      };
     };
 
     # from profiles/minimal.nix

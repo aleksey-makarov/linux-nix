@@ -30,11 +30,7 @@ with lib;
     fileSystems = {
       "/" = {
         device = "/dev/root";
-        fsType = "9p";
-        options = [
-          "trans=virtio"
-          "version=9p2000.L"
-        ];
+        fsType = "ext4";
       };
       "/lib/modules" = {
         device = "modulesshare";

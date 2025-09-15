@@ -61,9 +61,10 @@ writeShellScript "test-qemu" ''
   )
 
   echo "Starting QEMU..."
-  echo "Press Ctrl+C to exit QEMU"
+  echo "Press Ctrl+] to exit QEMU"
   echo "----------------------------------------"
 
+  ${coreutils}/bin/stty intr ^] # send INTR with Control-]
   ${qemu}/bin/qemu-system-x86_64 \
     -m 2048 \
     -cpu host -enable-kvm \
@@ -74,6 +75,8 @@ writeShellScript "test-qemu" ''
     -append "''${KERNEL_PARAMS[*]}" \
     -display none \
     -serial stdio
+
+  ${coreutils}/bin/stty intr ^c
 
   echo ""
   echo "QEMU exited"

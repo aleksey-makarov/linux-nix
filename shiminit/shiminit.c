@@ -31,24 +31,20 @@
 } while(0)
 
 struct mntpoint {
-    const char *dev;
     const char *fs_type;
     const char *where;
     mode_t mode;
-    const char *options;
-    unsigned long flags;
 };
 
 static const char nix_mount_opts_9p[] =
     "trans=virtio,version=9p2000.L,cache=mmap,msize=1048576";
 
 static struct mntpoint mntpoints[] = {
-    { NULL,         "proc",     "/proc", 0555, NULL,              0 },
-    { NULL,         "sysfs",    "/sys",  0555, NULL,              0 },
-    { NULL,         "devtmpfs", "/dev",  0755, NULL,              0 },
-    { NULL,         "tmpfs",    "/run",  0755, NULL,              0 },
-    { "nixshare",   "9p",       "/nix",  0755, nix_mount_opts_9p, 0 },
-    { NULL,         NULL,       NULL,    0,    NULL,              0 },
+    { "proc",     "/proc", 0555, },
+    { "sysfs",    "/sys",  0555, },
+    { "devtmpfs", "/dev",  0755, },
+    { "tmpfs",    "/run",  0755, },
+    { NULL,       NULL,    0,    },
 };
 
 int main() {
@@ -57,17 +53,15 @@ int main() {
 
     for (struct mntpoint *mp = mntpoints; mp->where; mp++) {
 
-        pr_info("mounting \"%s\" (\"%s\") at \"%s\" (%04o), options: \"%s\"",
-            mp->dev ? mp->dev : "(null)",
+        pr_info("mounting NULL (\"%s\") at \"%s\" (%04o), options: NULL",
             mp->fs_type,
             mp->where,
-            mp->mode,
-            mp->options ? mp->options : "(none)");
+            mp->mode);
 
         if (mkdir(mp->where, mp->mode) == -1 && errno != EEXIST)
             pr_die("mkdir(\"%s\", %04o): %m", mp->where, mp->mode);
 
-        if (mount(mp->dev, mp->where, mp->fs_type, mp->flags, mp->options) == -1) {
+        if (mount(NULL, mp->where, mp->fs_type, 0, NULL) == -1) {
 
             // devtmpfs may already be mounted automatically by the kernel
             if (strcmp(mp->fs_type, "devtmpfs") == 0 && errno == EBUSY) {
@@ -75,14 +69,24 @@ int main() {
                 continue;
             }
 
-            pr_die("mount(\"%s\", \"%s\", \"%s\", 0x%lx, \"%s\"): %m",
-                mp->dev ? mp->dev : "(null)",
+            pr_die("mount(NULL, \"%s\", \"%s\", 0, NULL): %m",
                 mp->where,
-                mp->fs_type,
-                mp->flags,
-                mp->options ? mp->options : "");
+                mp->fs_type);
         }
     }
+
+    pr_info("mounting \"nixshare\" (\"9p\") at \"/nix/store\" (0755), options: \"%s\"",
+        nix_mount_opts_9p);
+
+    if (mkdir("/nix", 0755) == -1 && errno != EEXIST)
+        pr_die("mkdir(\"%s\", %04o): %m", "/nix", 0755);
+
+    if (mkdir("/nix/store", 0755) == -1 && errno != EEXIST)
+        pr_die("mkdir(\"%s\", %04o): %m", "/nix/store", 0755);
+
+    if (mount("nixshare", "/nix/store", "9p", 0, nix_mount_opts_9p) == -1)
+        pr_die("mount(\"nixshare\", \"/nix/store\", \"9p\", 0x0, \"%s\"): %m",
+            nix_mount_opts_9p);
 
     // Parse kernel command line to find systemConfig=xxx
     pr_info("parsing kernel command line for systemConfig parameter");

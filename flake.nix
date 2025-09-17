@@ -41,7 +41,10 @@
         };
       };
 
-      pkgsARM = import nixpkgs { system = systemARM; };
+      pkgsARM = import nixpkgs {
+        inherit overlays;
+        system = systemARM;
+      };
       pkgsCross = pkgs.pkgsCross.aarch64-multiplatform;
 
       # nixos = nixpkgs.lib.nixosSystem {
@@ -157,6 +160,7 @@
         test-script = pkgs.test-script;
 
         shiminit = pkgs.pkgsStatic.shiminit;
+        shiminit-arm = pkgsARM.pkgsStatic.shiminit;
 
         # default = nixos.config.system.build.images.raw;
         iso = nixos.config.system.build.images.iso;

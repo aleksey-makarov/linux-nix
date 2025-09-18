@@ -28,10 +28,10 @@ with lib;
     };
 
     fileSystems = {
-      "/" = {
-        device = "/dev/root";
-        fsType = "ext4";
-      };
+      # "/" = {
+      #   device = "/dev/root";
+      #   fsType = "ext4";
+      # };
       "/lib/modules" = {
         device = "modulesshare";
         fsType = "9p";

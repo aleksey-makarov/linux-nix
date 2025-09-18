@@ -9,7 +9,7 @@
   init-binary,
 }:
 
-writeShellScript "test-qemu" ''
+writeShellScript "run-qemu" ''
   set -euo pipefail
 
   KERNEL=$HOME/linux_build/arch/x86/boot/bzImage

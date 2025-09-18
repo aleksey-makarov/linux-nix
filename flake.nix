@@ -26,7 +26,7 @@
         nix-vscode-extensions.overlays.default
         (final: prev: {
           shiminit = final.callPackage ./shiminit { };
-          test-script = final.callPackage ./test-script.nix {
+          run-qemu = final.callPackage ./run-qemu.nix {
             nixosSystem = nixos.config.system.build.toplevel;
             init-binary = "${final.pkgsStatic.shiminit}/bin/shiminit";
           };
@@ -117,7 +117,7 @@
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
 
         qemu = pkgs.qemu;
-        test-script = pkgs.test-script;
+        run-qemu= pkgs.run-qemu;
 
         shiminit = pkgs.pkgsStatic.shiminit;
         shiminit-arm = pkgsARM.pkgsStatic.shiminit;

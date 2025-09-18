@@ -72,6 +72,44 @@
         ];
       };
 
+      run-qemu-aarch64 = with pkgs; writeShellScript "run-qemu-aarch64" ''
+        set -euo pipefail
+
+        # Kernel parameters
+        KERNEL_PARAMS=(
+            "root=/dev/vda"
+            "rootfstype=ext4"
+            "rw"
+            # "init=/$INIT_BINARY_NAME"
+            "console=ttyS0"
+            "systemConfig=${nixosARM.config.system.build.toplevel}"
+            "earlycon"
+        )
+
+        echo "Starting QEMU..."
+        echo "Press Ctrl+] to exit QEMU"
+        echo "----------------------------------------"
+
+        ${coreutils}/bin/stty intr ^] # send INTR with Control-]
+        ${qemu}/bin/qemu-system-aarch64 \
+          -machine virt -smp 2 -cpu max -m 4G \
+          -kernel ${nixosARM.config.boot.kernelPackages.kernel}/Image \
+          -initrd ${nixosARM.config.system.build.initialRamdisk}/initrd \
+          -append "''${KERNEL_PARAMS[*]}" \
+          -display none \
+          -serial stdio
+
+          # -drive file="$DISK_IMAGE",format=raw,if=virtio \
+          # -virtfs local,path=/nix/store,mount_tag=nixshare,security_model=passthrough,readonly=on \
+          # -virtfs local,path="$MODULES_DIR",mount_tag=modulesshare,security_model=passthrough,readonly=on \
+          # -cpu host -enable-kvm \
+
+        ${coreutils}/bin/stty intr ^c
+
+        echo ""
+        echo "QEMU exited"
+      '';
+
     in
     {
       devShells.${system} = rec {
@@ -95,6 +133,7 @@
               python3
               git
               elfutils
+              qemu
 
               nixfmt-rfc-style
               shellcheck
@@ -113,11 +152,12 @@
           };
       };
 
-      packages.${system} = rec {
+      packages.${system} = {
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
 
         qemu = pkgs.qemu;
-        run-qemu= pkgs.run-qemu;
+        run-qemu = pkgs.run-qemu;
+        run-qemu-aarch64 = run-qemu-aarch64;
 
         shiminit = pkgs.pkgsStatic.shiminit;
         shiminit-arm = pkgsARM.pkgsStatic.shiminit;

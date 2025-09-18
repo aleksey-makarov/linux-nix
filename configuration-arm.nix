@@ -18,10 +18,18 @@ with lib;
 
     # KERNEL
     boot = {
+      loader.grub.enable = false;
       #   extraModulePackages = with config.boot.kernelPackages; [virtio-lo];
       #   kernelModules = ["virtio-lo"];
       #   # kernelParams = [ "drm.debug=0x006" ];
       consoleLogLevel = 7;
+    };
+
+    fileSystems = {
+      "/" = {
+        device = "/dev/root";
+        fsType = "ext4";
+      };
     };
 
     # from profiles/minimal.nix

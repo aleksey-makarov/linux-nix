@@ -1,11 +1,12 @@
-{ lib
-, writeShellScript
-, qemu
-, coreutils
-, e2fsprogs
-, util-linux
-, nixosSystem
-, init-binary
+{
+  lib,
+  writeShellScript,
+  qemu,
+  coreutils,
+  e2fsprogs,
+  util-linux,
+  nixosSystem,
+  init-binary,
 }:
 
 writeShellScript "test-qemu" ''
@@ -17,7 +18,7 @@ writeShellScript "test-qemu" ''
   DISK_IMAGE="$HOME/shimdisk-$INIT_BINARY_MD5.img"
   DISK_SIZE_BYTES=$((64 * 1024 * 1024))
   DISK_LABEL="imgroot"
-  MODULES_DIR=$(${coreutils}/bin/realpath $HOME/linux_modules/lib/modules)
+  MODULES_DIR=$(${coreutils}/bin/realpath "''$HOME/linux_modules/lib/modules")
 
   # Create disk if it doesn't exist
   if [[ ! -f "$DISK_IMAGE" ]]; then
@@ -49,6 +50,17 @@ writeShellScript "test-qemu" ''
   SYMLINK_IMAGE="$HOME/shimdisk.img"
   ${coreutils}/bin/ln -sf "$DISK_IMAGE" "$SYMLINK_IMAGE"
   echo "Symlink created: $SYMLINK_IMAGE -> $DISK_IMAGE"
+
+  # Create directory for file exchange
+  ${coreutils}/bin/mkdir -p "$HOME/xchg"
+  TTY_FILE="$HOME/xchg/tty.sh"
+  read -r rows cols <<< "$(${coreutils}/bin/stty size)"
+
+  cat << EOF > "''${TTY_FILE}"
+  export TERM=xterm-256color
+  stty rows ''$rows cols ''$cols
+  reset
+  EOF
 
   # Kernel parameters
   KERNEL_PARAMS=(

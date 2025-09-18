@@ -39,29 +39,29 @@ with lib;
 
     # services.udev.packages = [pkgs.remote-virtio-gpu-debug];
 
-    virtualisation = {
-      memorySize = 4 * 1024;
-      cores = 4;
-      graphics = false;
-      forwardPorts = [
-        {
-          from = "host";
-          host.port = 10022;
-          guest.port = 22;
-        }
-      ];
-      directBoot = {
-        enable = true;
-        # initrd = "${config.system.build.initialRamdisk}/initrd";
-      };
-      qemu = {
-        # options = [
-        #   # "-serial stdio"
-        #   # "-device virtio-vga-gl"
-        #   # "-display sdl,gl=on"
-        # ];
-      };
-    };
+    #    virtualisation = {
+    #      memorySize = 4 * 1024;
+    #      cores = 4;
+    #      graphics = false;
+    #      forwardPorts = [
+    #        {
+    #          from = "host";
+    #          host.port = 10022;
+    #          guest.port = 22;
+    #        }
+    #      ];
+    #      directBoot = {
+    #        enable = true;
+    #        # initrd = "${config.system.build.initialRamdisk}/initrd";
+    #      };
+    #      qemu = {
+    #        # options = [
+    #        #   # "-serial stdio"
+    ##        #   # "-device virtio-vga-gl"
+    #        #   # "-display sdl,gl=on"
+    #        # ];
+    #      };
+    #    };
 
     security.polkit.enable = true;
 

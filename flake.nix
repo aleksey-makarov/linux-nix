@@ -21,7 +21,6 @@
     }:
     let
       system = "x86_64-linux";
-      systemARM = "aarch64-linux";
 
       overlays = [
         nix-vscode-extensions.overlays.default
@@ -43,30 +42,22 @@
 
       pkgsARM = import nixpkgs {
         inherit overlays;
-        system = systemARM;
+        system = "aarch64-linux";
       };
+
       pkgsCross = pkgs.pkgsCross.aarch64-multiplatform;
 
-      # nixos = nixpkgs.lib.nixosSystem {
-      #   inherit system;
-      #   modules = [
-      #     ./configuration.nix
-      #     ./qemu-vm-no-kernel.nix
-      #   ];
-      # };
-
       nixos = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+        inherit system;
         modules = [
           ./configuration-test.nix
         ];
       };
 
       nixosARM = nixpkgs.lib.nixosSystem {
-        system = systemARM;
+        system = "aarch64-linux";
         modules = [
-          ./configuration.nix
-          # ./qemu-vm-no-kernel.nix
+          ./configuration-arm.nix
         ];
       };
 
@@ -80,37 +71,6 @@
 
         ];
       };
-
-      startvm_sh = pkgs.writeShellScript "startvm.sh" ''
-        ${pkgs.coreutils}/bin/mkdir -p ./xchg
-
-        TMPDIR=''$(pwd)
-        USE_TMPDIR=1
-        export TMPDIR USE_TMPDIR
-
-        TTY_FILE="./xchg/tty.sh"
-        read -r rows cols <<< "''$(${pkgs.coreutils}/bin/stty size)"
-
-        cat << EOF > "''${TTY_FILE}"
-        export TERM=xterm-256color
-        stty rows ''$rows cols ''$cols
-        reset
-        EOF
-
-        ${pkgs.coreutils}/bin/stty intr ^] # send INTR with Control-]
-        ${pkgs.qemu}/bin/qemu-system-aarch64 -nographic \
-            -machine virt -cpu cortex-a57 \
-            -bios ${pkgs.qemu}/share/qemu/edk2-aarch64-code.fd \
-            -drive if=none,file=./nixos-image-sd-card-aarch64-linux.img,id=hd0,format=raw \
-            -device virtio-blk-device,drive=hd0 \
-            -m 4G
-
-            # -bios ${pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64}/u-boot.bin \
-            # -dtb ${pkgs.qemu}/share/qemu/edk2-aarch64-code.dtb \
-            # ./nixos-image-sd-card-aarch64-linux.img \
-
-        ${pkgs.coreutils}/bin/stty intr ^c
-      '';
 
     in
     {
@@ -155,33 +115,25 @@
 
       packages.${system} = rec {
         u-boot = pkgs.pkgsCross.aarch64-multiplatform.ubootQemuAarch64;
+
         qemu = pkgs.qemu;
-        startvm = startvm_sh;
         test-script = pkgs.test-script;
 
         shiminit = pkgs.pkgsStatic.shiminit;
         shiminit-arm = pkgsARM.pkgsStatic.shiminit;
 
-        # default = nixos.config.system.build.images.raw;
-        iso = nixos.config.system.build.images.iso;
-        sd-card = nixos.config.system.build.images.sd-card;
-        kernel = nixos.config.boot.kernelPackages.kernel;
-        kernel-dev = nixos.config.boot.kernelPackages.kernel.dev;
-        initramfs = nixos.config.system.build.initialRamdisk;
-        default = nixos.config.system.build.vm;
+        kernel = nixosARM.config.boot.kernelPackages.kernel;
+        kernel-dev = nixosARM.config.boot.kernelPackages.kernel.dev;
+        initramfs = nixosARM.config.system.build.initialRamdisk;
       };
 
-      packages.${systemARM} = rec {
+      packages."aarch64-linux" = rec {
         # default = nixosARM.config.system.build.images.raw;
         iso = nixosARM.config.system.build.images.iso;
         default = nixosARM.config.system.build.images.sd-card;
       };
 
       applications.${system} = rec {
-        startvm = {
-          type = "app";
-          program = "${startvm_sh}";
-        };
         test-script = {
           type = "app";
           program = "${pkgs.test-script}";

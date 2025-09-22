@@ -138,16 +138,23 @@
               nixfmt-rfc-style
               shellcheck
 
+              vulkan-tools
+
+
               mc # for mcedit
             ];
             shellHook = ''
               export HOME=$(pwd)
               echo "nixpkgs: ${nixpkgs}"
+              echo "mesas: ${mesa}"
             '';
             env = {
               EDITOR = "mcedit";
               CROSS_COMPILE_arm64 = pkgsCross.stdenv.cc.targetPrefix;
               NIX_QEMU = pkgs.qemu;
+
+              # VK_ICD_FILENAMES="${mesa}/share/vulkan/icd.d/lvp_icd.x86_64.json";
+              VK_ICD_FILENAMES="${mesa}/share/vulkan/icd.d/radeon_icd.x86_64.json";
             };
           };
       };

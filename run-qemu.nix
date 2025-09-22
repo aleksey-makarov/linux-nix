@@ -7,6 +7,8 @@
   util-linux,
   nixosSystem,
   init-binary,
+  mesa,
+  libglvnd,
 }:
 
 writeShellScript "run-qemu" ''
@@ -19,6 +21,14 @@ writeShellScript "run-qemu" ''
   DISK_SIZE_BYTES=$((64 * 1024 * 1024))
   DISK_LABEL="imgroot"
   MODULES_DIR=$(${coreutils}/bin/realpath "''$HOME/linux_modules/lib/modules")
+  QEMU_MEM_SIZE=4G
+
+  export LD_LIBRARY_PATH="${mesa}/lib:${libglvnd}/lib
+  # : $ LD_LIBRARY_PATH"
+  export LIBGL_DRIVERS_PATH="${mesa}/lib/dri"
+  export LIBVA_DRIVERS_PATH="${mesa}/lib/dri"
+
+  export VK_ICD_FILENAMES="${mesa}/share/vulkan/icd.d/radeon_icd.x86_64.json";
 
   # Create disk if it doesn't exist
   if [[ ! -f "$DISK_IMAGE" ]]; then
@@ -78,7 +88,7 @@ writeShellScript "run-qemu" ''
 
   ${coreutils}/bin/stty intr ^] # send INTR with Control-]
   ${qemu}/bin/qemu-system-x86_64 \
-    -m 2048 \
+    -m $QEMU_MEM_SIZE \
     -cpu host -enable-kvm \
     -kernel "$KERNEL" \
     -drive file="$DISK_IMAGE",format=raw,if=virtio \
@@ -86,6 +96,12 @@ writeShellScript "run-qemu" ''
     -virtfs local,path="$MODULES_DIR",mount_tag=modulesshare,security_model=passthrough,readonly=on \
     -append "''${KERNEL_PARAMS[*]}" \
     -display none \
+    -vga none                                                    \
+    -device virtio-vga-gl,hostmem=4G,blob=true,venus=true        \
+    -display gtk,gl=on,show-cursor=on                            \
+    -usb -device usb-tablet                                      \
+    -object memory-backend-memfd,id=mem1,size=$QEMU_MEM_SIZE     \
+    -machine memory-backend=mem1                                 \
     -serial stdio
 
   ${coreutils}/bin/stty intr ^c

@@ -140,13 +140,12 @@
 
               vulkan-tools
 
-
               mc # for mcedit
             ];
             shellHook = ''
               export HOME=$(pwd)
               echo "nixpkgs: ${nixpkgs}"
-              echo "mesas: ${mesa}"
+              echo "mesa: ${mesa}"
             '';
             env = {
               EDITOR = "mcedit";

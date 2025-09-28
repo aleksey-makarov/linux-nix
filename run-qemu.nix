@@ -23,7 +23,7 @@ writeShellScript "run-qemu" ''
   MODULES_DIR=$(${coreutils}/bin/realpath "''$HOME/linux_modules/lib/modules")
   QEMU_MEM_SIZE=4G
 
-  export LD_LIBRARY_PATH="${mesa}/lib:${libglvnd}/lib
+  export LD_LIBRARY_PATH="${mesa}/lib:${libglvnd}/lib"
   # : $ LD_LIBRARY_PATH"
   export LIBGL_DRIVERS_PATH="${mesa}/lib/dri"
   export LIBVA_DRIVERS_PATH="${mesa}/lib/dri"

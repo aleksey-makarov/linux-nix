@@ -14,7 +14,7 @@ with lib;
 
   config = {
     system.stateVersion = "25.05";
-    # hardware.opengl.enable = true;
+    hardware.graphics.enable = true;
 
     # KERNEL
     boot = {
@@ -77,14 +77,16 @@ with lib;
         tmux
         htop
 
-        # kmscube
-        # glmark2
-        # glxinfo
-        # mediainfo
-        # mesa-demos
-        # evtest
+        kmscube
+        glmark2
+        glxinfo
+        mediainfo
+        mesa-demos
+        evtest
 
-        # weston
+        weston
+        vulkan-tools
+
         # vanilla-dmz
 
         # gst_all_1.gstreamer # this is .bin (probably this is a bug)

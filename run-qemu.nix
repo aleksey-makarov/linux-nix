@@ -87,6 +87,7 @@ writeShellScript "run-qemu" ''
   echo "----------------------------------------"
 
   ${coreutils}/bin/stty intr ^] # send INTR with Control-]
+
   ${qemu}/bin/qemu-system-x86_64 \
     -m $QEMU_MEM_SIZE \
     -cpu host -enable-kvm \

@@ -72,43 +72,45 @@
         ];
       };
 
-      run-qemu-aarch64 = with pkgs; writeShellScript "run-qemu-aarch64" ''
-        set -euo pipefail
+      run-qemu-aarch64 =
+        with pkgs;
+        writeShellScript "run-qemu-aarch64" ''
+          set -euo pipefail
 
-        # Kernel parameters
-        KERNEL_PARAMS=(
-            "root=/dev/vda"
-            "rootfstype=ext4"
-            "rw"
-            # "init=/$INIT_BINARY_NAME"
-            "console=ttyS0"
-            "systemConfig=${nixosARM.config.system.build.toplevel}"
-            "earlycon"
-        )
+          # Kernel parameters
+          KERNEL_PARAMS=(
+              "root=/dev/vda"
+              "rootfstype=ext4"
+              "rw"
+              # "init=/$INIT_BINARY_NAME"
+              "console=ttyS0"
+              "systemConfig=${nixosARM.config.system.build.toplevel}"
+              "earlycon"
+          )
 
-        echo "Starting QEMU..."
-        echo "Press Ctrl+] to exit QEMU"
-        echo "----------------------------------------"
+          echo "Starting QEMU..."
+          echo "Press Ctrl+] to exit QEMU"
+          echo "----------------------------------------"
 
-        ${coreutils}/bin/stty intr ^] # send INTR with Control-]
-        ${qemu}/bin/qemu-system-aarch64 \
-          -machine virt -smp 2 -cpu max -m 4G \
-          -kernel ${nixosARM.config.boot.kernelPackages.kernel}/Image \
-          -initrd ${nixosARM.config.system.build.initialRamdisk}/initrd \
-          -append "''${KERNEL_PARAMS[*]}" \
-          -display none \
-          -serial stdio
+          ${coreutils}/bin/stty intr ^] # send INTR with Control-]
+          ${qemu}/bin/qemu-system-aarch64 \
+            -machine virt -smp 2 -cpu max -m 4G \
+            -kernel ${nixosARM.config.boot.kernelPackages.kernel}/Image \
+            -initrd ${nixosARM.config.system.build.initialRamdisk}/initrd \
+            -append "''${KERNEL_PARAMS[*]}" \
+            -display none \
+            -serial stdio
 
-          # -drive file="$DISK_IMAGE",format=raw,if=virtio \
-          # -virtfs local,path=/nix/store,mount_tag=nixshare,security_model=passthrough,readonly=on \
-          # -virtfs local,path="$MODULES_DIR",mount_tag=modulesshare,security_model=passthrough,readonly=on \
-          # -cpu host -enable-kvm \
+            # -drive file="$DISK_IMAGE",format=raw,if=virtio \
+            # -virtfs local,path=/nix/store,mount_tag=nixshare,security_model=passthrough,readonly=on \
+            # -virtfs local,path="$MODULES_DIR",mount_tag=modulesshare,security_model=passthrough,readonly=on \
+            # -cpu host -enable-kvm \
 
-        ${coreutils}/bin/stty intr ^c
+          ${coreutils}/bin/stty intr ^c
 
-        echo ""
-        echo "QEMU exited"
-      '';
+          echo ""
+          echo "QEMU exited"
+        '';
 
     in
     {
@@ -153,7 +155,7 @@
               NIX_QEMU = pkgs.qemu;
 
               # VK_ICD_FILENAMES="${mesa}/share/vulkan/icd.d/lvp_icd.x86_64.json";
-              VK_ICD_FILENAMES="${mesa}/share/vulkan/icd.d/radeon_icd.x86_64.json";
+              VK_ICD_FILENAMES = "${mesa}/share/vulkan/icd.d/radeon_icd.x86_64.json";
             };
           };
       };

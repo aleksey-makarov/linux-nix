@@ -21,7 +21,7 @@ writeShellScript "run-qemu" ''
   DISK_SIZE_BYTES=$((64 * 1024 * 1024))
   DISK_LABEL="imgroot"
   MODULES_DIR=$(${coreutils}/bin/realpath "''$HOME/linux_modules/lib/modules")
-  QEMU_MEM_SIZE=4G
+  QEMU_MEM_SIZE=8G
 
   export LD_LIBRARY_PATH="${mesa}/lib:${libglvnd}/lib"
   # : $ LD_LIBRARY_PATH"
@@ -96,10 +96,8 @@ writeShellScript "run-qemu" ''
     -virtfs local,path=/nix/store,mount_tag=nixshare,security_model=passthrough,readonly=on \
     -virtfs local,path="$MODULES_DIR",mount_tag=modulesshare,security_model=passthrough,readonly=on \
     -append "''${KERNEL_PARAMS[*]}" \
-    -display none \
-    -vga none                                                    \
-    -device virtio-vga-gl,hostmem=4G,blob=true,venus=true        \
-    -display gtk,gl=on,show-cursor=on                            \
+    -device virtio-gpu-gl,hostmem=4G,blob=true,venus=true        \
+    -display sdl,gl=on,show-cursor=on                            \
     -usb -device usb-tablet                                      \
     -object memory-backend-memfd,id=mem1,size=$QEMU_MEM_SIZE     \
     -machine memory-backend=mem1                                 \

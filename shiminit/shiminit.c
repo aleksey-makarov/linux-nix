@@ -135,6 +135,5 @@ int main() {
     execv(exec_buf, new_argv);
     pr_die("execv(\"%s\") failed: %m", exec_buf);
 
-    pr_die("exec() is not implemented yet");
     return 1;
 }
